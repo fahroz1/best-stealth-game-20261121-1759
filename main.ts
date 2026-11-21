@@ -89,12 +89,17 @@ function checkEntry() {
   return { game, shots };
 }
 
-// The checks above passed, so hand the entry in: a clean output directory,
+// The checks above passed, so hand the entry in: an empty output directory,
 // the game and its screenshots copied over, and the dossier the judge reads.
+// Empty only the directory's children, never the directory itself: the
+// grader runs this as an unprivileged user with a writable /output it does
+// not own, so removing the directory itself fails with EPERM.
 const checked = checkEntry();
 
-rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(outputDir, { recursive: true });
+for (const entry of readdirSync(outputDir)) {
+  rmSync(join(outputDir, entry), { recursive: true, force: true });
+}
 cpSync(GAME_DIR, join(outputDir, 'game'), { recursive: true });
 cpSync(SHOTS_DIR, join(outputDir, 'screenshots'), { recursive: true });
 
